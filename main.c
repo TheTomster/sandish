@@ -1,0 +1,88 @@
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <GL3/gl3w.h>
+#include <GL/glfw.h>
+
+#include "board.h"
+#include "cam.h"
+#include "draw.h"
+#include "panic.h"
+#include "screen.h"
+
+#define WINDOW_WIDTH        800
+#define WINDOW_HEIGHT       600
+#define WINDOW_TITLE        "Sandish"
+
+#define BOARD_WORLD_CENTER  {0, 0, -7, 1}
+#define BOARD_WORLD_SIZE    5
+#define BOARD_SIZE          32
+
+
+static void mainloop();
+static void on_resize();
+
+static screen_handle screen;
+
+
+int main(void) {
+  int ok = glfwInit();
+  if (!ok)
+    panic("Error initializing GLFW!");
+  ok = glfwOpenWindow(
+      WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, 0, 0, 8, 0, GLFW_WINDOW);
+  if (!ok)
+    panic ("Error opening window!");
+  if (gl3wInit())
+    panic("Gl3w failed to load!");
+  glfwSetWindowTitle(WINDOW_TITLE);
+  glfwSwapInterval(1);
+  glfwSwapBuffers();
+
+  screen = screen_new();
+  glfwSetWindowSizeCallback(&on_resize);
+
+  cam_handle c;
+  { // camera initialization
+    vec4 pos = {0, 0, -10, 1};
+    vec4 rot = {0, 0, 0, 1};
+    c = cam_new(pos, rot);
+  }
+
+  board_handle b;
+  { // board initialization
+    vec4 center = BOARD_WORLD_CENTER;
+    b = board_new(center, BOARD_WORLD_SIZE, BOARD_SIZE);
+  }
+
+  printf("Loading...\n");
+  draw_init(screen, b);
+  printf("Done.\n");
+
+  mainloop(b, c);
+
+  board_delete(b);
+  cam_delete(c);
+  screen_delete(screen);
+  glfwTerminate();
+  return EXIT_SUCCESS;
+}
+
+static void mainloop(board_handle b, cam_handle c) {
+  unsigned int running = 1;
+  double time = glfwGetTime();
+  while (running) {
+    draw_board(b, c);
+    glfwSwapBuffers();
+    running = !glfwGetKey(GLFW_KEY_ESC) && glfwGetWindowParam(GLFW_OPENED);
+    double fps = 1 / (glfwGetTime() - time);
+    time = glfwGetTime();
+    printf("%f FPS\n", fps);
+  }
+}
+
+static void on_resize(int width, int height) {
+  screen_set_size(screen, width, height);
+}
