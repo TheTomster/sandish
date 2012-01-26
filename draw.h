@@ -2,8 +2,8 @@
 #define DRAW_H
 
 #include "board.h"
-#include "screen.h"
 #include "cam.h"
+#include "screen.h"
 
 void draw_init(screen_handle s, board_handle b);
 

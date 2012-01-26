@@ -9,8 +9,10 @@
 #include "board.h"
 #include "cam.h"
 #include "draw.h"
+#include "lualink.h"
 #include "panic.h"
 #include "screen.h"
+#include "tick.h"
 
 #define WINDOW_WIDTH        800
 #define WINDOW_HEIGHT       600
@@ -21,7 +23,7 @@
 #define BOARD_SIZE          32
 
 
-static void mainloop();
+//static void mainloop();
 static void on_resize();
 
 static screen_handle screen;
@@ -57,11 +59,15 @@ int main(void) {
     b = board_new(center, BOARD_WORLD_SIZE, BOARD_SIZE);
   }
 
+  tick_init(b, c);
+
   printf("Loading...\n");
   draw_init(screen, b);
   printf("Done.\n");
 
-  mainloop(b, c);
+  lualink_init(b);
+  lualink_load_main();
+  lualink_enter_main();
 
   board_delete(b);
   cam_delete(c);
@@ -70,19 +76,20 @@ int main(void) {
   return EXIT_SUCCESS;
 }
 
-static void mainloop(board_handle b, cam_handle c) {
-  unsigned int running = 1;
-  double time = glfwGetTime();
-  while (running) {
-    draw_board(b, c);
-    glfwSwapBuffers();
-    running = !glfwGetKey(GLFW_KEY_ESC) && glfwGetWindowParam(GLFW_OPENED);
-    double fps = 1 / (glfwGetTime() - time);
-    time = glfwGetTime();
-    printf("%f FPS\n", fps);
-  }
-}
+//static void mainloop(board_handle b, cam_handle c) {
+//  unsigned int running = 1;
+//  double time = glfwGetTime();
+//  while (running) {
+//    draw_board(b, c);
+//    glfwSwapBuffers();
+//    running = !glfwGetKey(GLFW_KEY_ESC) && glfwGetWindowParam(GLFW_OPENED);
+//    double fps = 1 / (glfwGetTime() - time);
+//    time = glfwGetTime();
+//    printf("%f FPS\n", fps);
+//  }
+//}
 
 static void on_resize(int width, int height) {
   screen_set_size(screen, width, height);
+  glViewport(0, 0, width, height);
 }

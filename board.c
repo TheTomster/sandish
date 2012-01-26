@@ -5,13 +5,18 @@
 #include "board.h"
 #include "panic.h"
 
+static unsigned int get_index(
+    board_handle b, unsigned int x, unsigned int y, unsigned int z);
+
 struct board {
   vec4 world_center; // world coords of centerpoint
   double world_size;
   // number of cells in the board. (a value of 30 here makes a 30x30x30 cube)
   unsigned int board_size;
+  unsigned int max_index;
   vec4 world_origin;
-  GLuint *data;
+  GLuint *data_e;
+  GLuint *data_n;
 };
 
 board_handle board_new(
@@ -22,10 +27,14 @@ board_handle board_new(
   b->world_center = world_center;
   b->world_size = world_size;
   b->board_size = board_size;
-  b->data = malloc(
-      sizeof(GLuint) * board_size * board_size * board_size);
-  for (int i = 0; i < board_size * board_size * board_size; i++) {
-    b->data[i] = 0;
+  b->max_index = board_size * board_size * board_size;
+  b->data_e = malloc(sizeof(GLuint) * b->max_index);
+  b->data_n = malloc(sizeof(GLuint) * b->max_index);
+  if (b->data_e == NULL || b->data_n == NULL)
+    panic("Error allocating board data!");
+  for (int i = 0; i < b->max_index; i++) {
+    b->data_e[i] = 0;
+    b->data_n[i] = 0;
   }
   // compute the mapping from 0,0,0 in board coords to world coords
   {
@@ -37,14 +46,13 @@ board_handle board_new(
     vec4 v = {x, y, z, 1};
     b->world_origin = v;
   }
-  if (b->data == NULL)
-    panic("Error allocating board data!");
   return b;
 }
 
 void board_delete(board_handle b) {
+  free(b->data_e);
+  free(b->data_n);
   free(b);
-  free(b->data);
 }
 
 vec4 board_get_world_center(board_handle b) {
@@ -67,11 +75,34 @@ unsigned int board_get_board_size(board_handle b) {
   return b->board_size;
 }
 
-const GLuint * board_get_data(board_handle b) {
-  return (const GLuint *) b->data;
+const GLuint board_get_existing(
+    board_handle b, unsigned int x, unsigned int y, unsigned int z) {
+  unsigned int i = get_index(b, x, y, z);
+  return b->data_e[i];
 }
 
-void board_set_data(
+const GLuint board_get_next(
+    board_handle b, unsigned int x, unsigned int y, unsigned int z) {
+  unsigned int i = get_index(b, x, y, z);
+  return b->data_n[i];
+}
+
+void board_set_next(
     board_handle b, unsigned int x, unsigned int y, unsigned int z,
     GLuint data) {
+  unsigned int i = get_index(b, x, y, z);
+  b->data_n[i] = data;
+}
+
+void board_swap_buffers(board_handle b) {
+  //TODO
+}
+
+static unsigned int get_index(
+    board_handle b, unsigned int x, unsigned int y, unsigned int z) {
+  unsigned int bs = b->board_size;
+  unsigned int i =  x * bs * bs + y * bs + z;
+  if (i > b->max_index - 1)
+    panic("Buffer overrun!");
+  return i;
 }

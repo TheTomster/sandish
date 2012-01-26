@@ -54,13 +54,6 @@ void draw_board(board_handle b, cam_handle c) {
   glBindBuffer(GL_ARRAY_BUFFER, position_buffer);
   glVertexAttribPointer(position_attrib, 3, GL_FLOAT, GL_FALSE, 0, NULL);
   glEnableVertexAttribArray(position_attrib);
-  // Set up board data
-  GLint data_attrib = glGetAttribLocation(program, "board_data");
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  const GLuint * board_data = board_get_data(b);
-  glVertexAttribPointer(
-      data_attrib, 1, GL_UNSIGNED_INT, GL_FALSE, 0, board_data);
-  glEnableVertexAttribArray(data_attrib);
 
   glDrawArrays(GL_POINTS, 0, buffer_size);
 }

@@ -24,10 +24,16 @@ double board_get_world_particle_step(board_handle b);
 
 unsigned int board_get_board_size(board_handle b);
 
-const GLuint * board_get_data(board_handle b);
+const GLuint board_get_existing(
+    board_handle b, unsigned int x, unsigned int y, unsigned int z);
 
-void board_set_data(
+const GLuint board_get_next(
+    board_handle b, unsigned int x, unsigned int y, unsigned int z);
+
+void board_set_next(
     board_handle b, unsigned int x, unsigned int y, unsigned int z,
     unsigned int data);
+
+void board_swap_buffers(board_handle b);
 
 #endif

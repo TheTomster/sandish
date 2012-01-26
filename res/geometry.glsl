@@ -1,6 +1,7 @@
 #version 150
 
 uniform float cube_size;
+uniform float aspect_ratio;
 
 layout(points) in;
 layout(triangle_strip, max_vertices=14) out;
@@ -14,20 +15,20 @@ out fragment {
 } f;
 
 vec4 cube_strip[14] = vec4[14](
-  vec4(1, 1, 1, 1),
-  vec4(0, 1, 1, 1),
-  vec4(1, 0, 1, 1),
-  vec4(0, 0, 1, 1),
-  vec4(0, 0, 0, 1),
-  vec4(0, 1, 1, 1),
-  vec4(0, 1, 0, 1),
-  vec4(1, 1, 1, 1),
-  vec4(1, 1, 0, 1),
-  vec4(1, 0, 1, 1),
-  vec4(1, 0, 0, 1),
-  vec4(0, 0, 0, 1),
-  vec4(0, 0, 1, 1),
-  vec4(0, 1, 0, 1)
+  vec4(1 * aspect_ratio, 1, 1, 1),
+  vec4(0 * aspect_ratio, 1, 1, 1),
+  vec4(1 * aspect_ratio, 0, 1, 1),
+  vec4(0 * aspect_ratio, 0, 1, 1),
+  vec4(0 * aspect_ratio, 0, 0, 1),
+  vec4(0 * aspect_ratio, 1, 1, 1),
+  vec4(0 * aspect_ratio, 1, 0, 1),
+  vec4(1 * aspect_ratio, 1, 1, 1),
+  vec4(1 * aspect_ratio, 1, 0, 1),
+  vec4(1 * aspect_ratio, 0, 1, 1),
+  vec4(1 * aspect_ratio, 0, 0, 1),
+  vec4(0 * aspect_ratio, 0, 0, 1),
+  vec4(0 * aspect_ratio, 0, 1, 1),
+  vec4(0 * aspect_ratio, 1, 0, 1)
 );
 
 void main() {
