@@ -1,61 +1,94 @@
-
 #include <GL3/gl3w.h>
 #include <stdio.h>
 
 #include "board.h"
 #include "cam.h"
 #include "draw.h"
+#include "list.h"
 #include "panic.h"
+#include "registry.h"
 #include "screen.h"
 #include "utils.h"
 
 static screen_handle screen;
+static board_handle board;
+static cam_handle cam;
+static registry_handle registry;
+
+static list_handle buckets;
+
 static GLuint position_buffer;
 static unsigned int buffer_size;
 static GLuint gshader;
 static GLuint vshader;
-static GLuint fshader;
-static GLuint program;
+static GLuint * fshaders;
+static GLuint * programs;
 static double cube_size;
 
 static void init_pos_buffer(board_handle b);
 static void init_shaders();
 
-void draw_init(screen_handle s, board_handle b) {
+static void update_buckets();
+
+void draw_init(
+    screen_handle s, board_handle b, cam_handle c, registry_handle r) {
   screen = s;
+  board = b;
+  cam = c;
+  registry = r;
   init_pos_buffer(b);
   init_shaders();
 }
 
-void draw_board(board_handle b, cam_handle c) {
+void draw_board() {
+  update_buckets();
+
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glEnable(GL_DEPTH_TEST);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  glUseProgram(program);
-
-  // set cube size uniform
-  GLint cube_size_uni = glGetUniformLocation(program, "cube_size");
-  if (cube_size_uni == -1)
-    printf("Warning: error setting cube size uniform.\n");
-  glUniform1f(cube_size_uni, cube_size);
-
-  // set aspect ratio uniform
-  GLint aspect_uni = glGetUniformLocation(program, "aspect_ratio");
-  if (aspect_uni == -1)
-    printf("Warning: error setting aspect ratio uniform.\n");
-  glUniform1f(aspect_uni, 1.0 / screen_aspect_ratio(screen));
-
-  // Set up vertex positions
-  GLint position_attrib = glGetAttribLocation(program, "position");
-  glBindBuffer(GL_ARRAY_BUFFER, position_buffer);
-  glVertexAttribPointer(position_attrib, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-  glEnableVertexAttribArray(position_attrib);
-
-  glDrawArrays(GL_POINTS, 0, buffer_size);
+  // For each bucket, draw the appropriate indices
+  for (int i = 0; i < list_size(buckets); i++) {
+    // select appropriate shader program
+    GLuint program = programs[i];
+    glUseProgram(program);
+    // set cube size uniform
+    GLint cube_size_uni = glGetUniformLocation(program, "cube_size");
+    if (cube_size_uni == -1)
+      printf("Warning: error setting cube size uniform.\n");
+    glUniform1f(cube_size_uni, cube_size);
+    // set aspect ratio uniform
+    GLint aspect_uni = glGetUniformLocation(program, "aspect_ratio");
+    if (aspect_uni == -1)
+      printf("Warning: error setting aspect ratio uniform.\n");
+    glUniform1f(aspect_uni, 1.0 / screen_aspect_ratio(screen));
+    // Set up vertex positions
+    GLint position_attrib = glGetAttribLocation(program, "position");
+    glBindBuffer(GL_ARRAY_BUFFER, position_buffer);
+    glVertexAttribPointer(position_attrib, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glEnableVertexAttribArray(position_attrib);
+    // Get the list of indices
+    list_handle is = list_get(buckets, i);
+    // Set up a buffer of the correct size
+    GLuint index_buffer;
+    glGenBuffers(1, &index_buffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+    glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * list_size(is), NULL,
+        GL_STREAM_DRAW);
+    // Fill the buffer with indices
+    GLuint * bufmap = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
+    for (int j = 0; j < list_size(is); j++) {
+      unsigned int * i_ptr = (unsigned int *) list_get(is, j);
+      bufmap[j] = *i_ptr;
+    }
+    glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+    // Draw that buffer data
+    glDrawElements(GL_POINTS, list_size(is), GL_UNSIGNED_INT, 0);
+    // Delete that buffer
+    glDeleteBuffers(1, &index_buffer);
+  }
 }
 
 static void init_pos_buffer(board_handle b) {
@@ -90,12 +123,43 @@ static void init_shaders() {
   if (vshader == 0)
     panic("Failed to set up vertex shader.");
   gshader = make_shader(GL_GEOMETRY_SHADER, "res/geometry.glsl");
-  if (gshader ==0)
+  if (gshader == 0)
     panic("Failed to set up geometry shader.");
-  fshader = make_shader(GL_FRAGMENT_SHADER, "res/fragment.glsl");
-  if (fshader == 0)
-    panic("Failed to set up fragment shader.");
-  program = make_program(gshader, vshader, fshader);
-  if (program == 0)
-    panic("Failed to link shaders.");
+  // load and compile each fragment shader, build a program from it, and add
+  // that program to the list.
+  fshaders = malloc(sizeof(GLuint) * registry_size(registry));
+  programs = malloc(sizeof(GLuint) * registry_size(registry));
+  for (int i = 0; i < registry_size(registry); i++) {
+    fshaders[i] = make_shader(
+        GL_FRAGMENT_SHADER, registry_get(registry, i + 1));
+    programs[i] = make_program(gshader, vshader, fshaders[i]);
+  }
+}
+
+void update_buckets() {
+  // Create a bucket for each possible data value.
+  if (buckets != NULL) {
+    for (int i = 0; i < list_size(buckets); i++) {
+      list_delete(list_get(buckets, i));
+    }
+    list_delete(buckets);
+    buckets = NULL;
+  }
+  buckets = list_new();
+  unsigned int num_buckets = registry_size(registry);
+  for (int i = 0; i < num_buckets; i++) {
+    list_handle bucket = list_new();
+    list_push(buckets, bucket);
+  }
+  // Scan the board and add indices to each bucket.
+  const unsigned int * board_buffer = board_get_buffer(board);
+  for (int i = 0; i < board_get_max_index(board); i++) {
+    unsigned int value = board_buffer[i];
+    if (value != 0) {
+      list_handle bucket = list_get(buckets, value - 1);
+      unsigned int * i_entry = malloc(sizeof(unsigned int));
+      *i_entry = i;
+      list_push(bucket, i_entry);
+    }
+  }
 }

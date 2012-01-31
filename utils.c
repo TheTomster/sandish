@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "utils.h"
 
 GLuint make_buffer(
     GLenum target, GLsizei buffer_size, const void * buffer_data,
@@ -16,7 +17,6 @@ GLuint make_buffer(
   }
   return buffer;
 }
-
 
 const char * load_file(const char * filename, GLint * length) {
   FILE * fd = fopen(filename, "r");
@@ -34,7 +34,6 @@ const char * load_file(const char * filename, GLint * length) {
   return buffer;
 }
 
-
 GLuint make_shader(GLenum type, const char * filename) {
   GLuint shader;
   shader = glCreateShader(type);
@@ -42,12 +41,19 @@ GLuint make_shader(GLenum type, const char * filename) {
   GLint source_len;
   const char * source = load_file(filename, &source_len);
   glShaderSource(shader, 1, &source, NULL);
+  int ok = compile_shader(shader);
+  if (!ok)
+    return 0;
+  return shader;
+}
+
+int compile_shader(GLuint shader) {
   glCompileShader(shader);
 
   GLint compiled;
   glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
   if (!compiled) {
-    fprintf(stderr, "Failed to compile %s:\n", filename);
+    fprintf(stderr, "Failed to compile shader:\n");
     GLint log_length;
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
     char * log = malloc(log_length + 1);
@@ -57,9 +63,8 @@ GLuint make_shader(GLenum type, const char * filename) {
     glDeleteShader(shader);
     return 0;
   }
-  return shader;
+  return 1;
 }
-
 
 GLuint make_program(
     GLuint geom_shader, GLuint vertex_shader, GLuint fragment_shader) {

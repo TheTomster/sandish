@@ -3,8 +3,6 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include <GL3/gl3w.h>
-
 #include "vec4.h"
 
 typedef struct board* board_handle;
@@ -24,10 +22,14 @@ double board_get_world_particle_step(board_handle b);
 
 unsigned int board_get_board_size(board_handle b);
 
-const GLuint board_get_existing(
+unsigned int board_get_max_index(board_handle b);
+
+const unsigned int * board_get_buffer(board_handle b);
+
+const unsigned int board_get_existing(
     board_handle b, unsigned int x, unsigned int y, unsigned int z);
 
-const GLuint board_get_next(
+const unsigned int board_get_next(
     board_handle b, unsigned int x, unsigned int y, unsigned int z);
 
 void board_set_next(

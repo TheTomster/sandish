@@ -15,8 +15,8 @@ struct board {
   unsigned int board_size;
   unsigned int max_index;
   vec4 world_origin;
-  GLuint *data_e;
-  GLuint *data_n;
+  unsigned int *data_e;
+  unsigned int *data_n;
 };
 
 board_handle board_new(
@@ -28,8 +28,8 @@ board_handle board_new(
   b->world_size = world_size;
   b->board_size = board_size;
   b->max_index = board_size * board_size * board_size;
-  b->data_e = malloc(sizeof(GLuint) * b->max_index);
-  b->data_n = malloc(sizeof(GLuint) * b->max_index);
+  b->data_e = malloc(sizeof(unsigned int) * b->max_index);
+  b->data_n = malloc(sizeof(unsigned int) * b->max_index);
   if (b->data_e == NULL || b->data_n == NULL)
     panic("Error allocating board data!");
   for (int i = 0; i < b->max_index; i++) {
@@ -75,13 +75,22 @@ unsigned int board_get_board_size(board_handle b) {
   return b->board_size;
 }
 
-const GLuint board_get_existing(
+unsigned int board_get_max_index(board_handle b) {
+  unsigned int x = b->board_size;
+  return x * x * x;
+}
+
+const unsigned int * board_get_buffer(board_handle b) {
+  return b->data_e;
+}
+
+const unsigned int board_get_existing(
     board_handle b, unsigned int x, unsigned int y, unsigned int z) {
   unsigned int i = get_index(b, x, y, z);
   return b->data_e[i];
 }
 
-const GLuint board_get_next(
+const unsigned int board_get_next(
     board_handle b, unsigned int x, unsigned int y, unsigned int z) {
   unsigned int i = get_index(b, x, y, z);
   return b->data_n[i];
@@ -89,13 +98,20 @@ const GLuint board_get_next(
 
 void board_set_next(
     board_handle b, unsigned int x, unsigned int y, unsigned int z,
-    GLuint data) {
+    unsigned int data) {
   unsigned int i = get_index(b, x, y, z);
   b->data_n[i] = data;
 }
 
 void board_swap_buffers(board_handle b) {
-  //TODO
+  unsigned int * swap = b->data_e;
+  b->data_e = b->data_n;
+  b->data_n = swap;
+  int x = b->board_size;
+  int max_index = x * x * x;
+  for (int i = 0; i < max_index; i++) {
+    b->data_n[i] = b->data_e[i];
+  }
 }
 
 static unsigned int get_index(

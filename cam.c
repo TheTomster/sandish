@@ -1,4 +1,3 @@
-
 #include "cam.h"
 #include "panic.h"
 #include "vec4.h"

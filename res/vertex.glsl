@@ -4,13 +4,12 @@ const float camera_near = 0.1;
 const float camera_far = 30.0;
 
 in vec4 position;
-in uint board_data;
-
-out geometry {
-  flat uint board_data;
-} g;
 
 uniform float aspect_ratio;
+
+out geo {
+  float depth;
+} o;
 
 void main() {
   vec4 dev_space;
@@ -22,5 +21,5 @@ void main() {
   dev_space.w = -position.z;
 
   gl_Position = dev_space;
-  g.board_data = board_data;
+  o.depth = position.z;
 }

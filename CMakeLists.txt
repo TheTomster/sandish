@@ -8,8 +8,10 @@ add_executable(sandish
   board.c
   cam.c
   draw.c
+  list.c
   lualink.c
   main.c
+  registry.c
   screen.c
   tick.c
   utils.c
@@ -18,13 +20,16 @@ add_executable(sandish
 target_link_libraries(sandish lua glfw gl3w ${OPENGL_LIBRARY})
 
 set(shader_files
-  fragment.glsl
+  debug.frag.glsl
+
   geometry.glsl
   vertex.glsl
 )
 
 set(lua_files
   main.lua
+
+  debug.lua
 )
 
 foreach(shader ${shader_files})

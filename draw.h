@@ -3,10 +3,12 @@
 
 #include "board.h"
 #include "cam.h"
+#include "registry.h"
 #include "screen.h"
 
-void draw_init(screen_handle s, board_handle b);
+void draw_init(
+    screen_handle s, board_handle b, cam_handle c, registry_handle r);
 
-void draw_board(board_handle b, cam_handle c);
+void draw_board();
 
 #endif

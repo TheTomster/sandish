@@ -1,4 +1,3 @@
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -11,6 +10,7 @@
 #include "draw.h"
 #include "lualink.h"
 #include "panic.h"
+#include "registry.h"
 #include "screen.h"
 #include "tick.h"
 
@@ -20,14 +20,12 @@
 
 #define BOARD_WORLD_CENTER  {0, 0, -7, 1}
 #define BOARD_WORLD_SIZE    5
-#define BOARD_SIZE          32
-
+#define BOARD_SIZE          128
 
 //static void mainloop();
 static void on_resize();
 
 static screen_handle screen;
-
 
 int main(void) {
   int ok = glfwInit();
@@ -59,14 +57,19 @@ int main(void) {
     b = board_new(center, BOARD_WORLD_SIZE, BOARD_SIZE);
   }
 
-  tick_init(b, c);
+  registry_handle r;
+  r = registry_new ();
+
+  tick_init(b);
+
+  lualink_init(b, r);
+  lualink_load_main();
+  lualink_init_registry();
 
   printf("Loading...\n");
-  draw_init(screen, b);
+  draw_init(screen, b, c, r);
   printf("Done.\n");
 
-  lualink_init(b);
-  lualink_load_main();
   lualink_enter_main();
 
   board_delete(b);
@@ -75,19 +78,6 @@ int main(void) {
   glfwTerminate();
   return EXIT_SUCCESS;
 }
-
-//static void mainloop(board_handle b, cam_handle c) {
-//  unsigned int running = 1;
-//  double time = glfwGetTime();
-//  while (running) {
-//    draw_board(b, c);
-//    glfwSwapBuffers();
-//    running = !glfwGetKey(GLFW_KEY_ESC) && glfwGetWindowParam(GLFW_OPENED);
-//    double fps = 1 / (glfwGetTime() - time);
-//    time = glfwGetTime();
-//    printf("%f FPS\n", fps);
-//  }
-//}
 
 static void on_resize(int width, int height) {
   screen_set_size(screen, width, height);

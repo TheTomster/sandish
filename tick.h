@@ -4,8 +4,8 @@
 #include "board.h"
 #include "cam.h"
 
-void tick_init(board_handle b, cam_handle c);
+void tick_init(board_handle b);
 
-int tick();
+int tick(int swap);
 
 #endif

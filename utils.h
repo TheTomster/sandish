@@ -9,6 +9,8 @@ const char * load_file(const char * filename, GLint * length);
 
 GLuint make_shader(GLenum type, const char * filename);
 
+int compile_shader(GLuint shader);
+
 GLuint make_program(
     GLuint geom_shader, GLuint vertex_shader, GLuint fragment_shader);
 
