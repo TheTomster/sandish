@@ -1,7 +1,6 @@
 // board represents the game board
 
-#ifndef BOARD_H
-#define BOARD_H
+#pragma once
 
 #include "vec4.h"
 
@@ -37,5 +36,3 @@ void board_set_next(
     unsigned int data);
 
 void board_swap_buffers(board_handle b);
-
-#endif

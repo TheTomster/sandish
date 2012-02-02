@@ -20,7 +20,7 @@
 
 #define BOARD_WORLD_CENTER  {0, 0, -7, 1}
 #define BOARD_WORLD_SIZE    5
-#define BOARD_SIZE          128
+#define BOARD_SIZE          32
 
 //static void mainloop();
 static void on_resize();

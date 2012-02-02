@@ -1,8 +1,7 @@
 // The registry maps board data values to corresponding fragment shaders.
 // The registry is 1-indexed. Valid indices range from 1 to registry_size - 1.
 
-#ifndef REGISTRY_H
-#define REGISTRY_H
+#pragma once
 
 typedef struct registry * registry_handle;
 
@@ -17,5 +16,3 @@ unsigned int registry_add(
 const char * registry_get(registry_handle r, unsigned int index);
 
 unsigned int registry_size(registry_handle r);
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef LIST_H
-#define LIST_H
+#pragma once
 
 typedef struct list * list_handle;
 
@@ -12,4 +11,3 @@ void list_push(list_handle l, void * item);
 void * list_get(list_handle l, unsigned int index);
 
 unsigned int list_size(list_handle l);
-#endif

@@ -20,10 +20,12 @@ static registry_handle registry;
 static int l_board_get_existing(lua_State *L);
 static int l_board_get_next(lua_State *L);
 static int l_board_set_next(lua_State *L);
+static int l_board_get_size(lua_State *L);
 static luaL_Reg board_funcs[] = {
   {.name = "getE", .func = &l_board_get_existing},
   {.name = "getN", .func = &l_board_get_next},
   {.name = "setN", .func = &l_board_set_next},
+  {.name = "getSize", .func = &l_board_get_size},
   {.name = NULL, .func = NULL}
 };
 static int l_tick_tick(lua_State *L);
@@ -116,6 +118,11 @@ static int l_board_set_next(lua_State *L) {
   d = luaL_checkinteger(L, 4);
   board_set_next(board, x - 1, y - 1, z - 1, d);
   return 0;
+}
+
+static int l_board_get_size(lua_State *L) {
+  lua_pushnumber(L, board_get_board_size(board));
+  return 1;
 }
 
 static int l_tick_tick(lua_State *L) {

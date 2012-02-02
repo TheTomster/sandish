@@ -1,5 +1,4 @@
-#ifndef UTILS__H
-#define UTILS__H
+#pragma once
 
 GLuint make_buffer(
     GLenum target, GLsizei buffer_size, const void * buffer_data,
@@ -13,5 +12,3 @@ int compile_shader(GLuint shader);
 
 GLuint make_program(
     GLuint geom_shader, GLuint vertex_shader, GLuint fragment_shader);
-
-#endif

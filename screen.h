@@ -1,5 +1,4 @@
-#ifndef SCREEN_INFO_H
-#define SCREEN_INFO_H
+#pragma once
 
 typedef struct screen* screen_handle;
 
@@ -14,5 +13,3 @@ int screen_width(screen_handle s);
 float screen_aspect_ratio(screen_handle s);
 
 void screen_set_size(screen_handle s, int width, int height);
-
-#endif

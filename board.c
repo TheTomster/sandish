@@ -119,6 +119,6 @@ static unsigned int get_index(
   unsigned int bs = b->board_size;
   unsigned int i =  x * bs * bs + y * bs + z;
   if (i > b->max_index - 1)
-    panic("Buffer overrun!");
+    return 0;
   return i;
 }

@@ -20,16 +20,19 @@ add_executable(sandish
 target_link_libraries(sandish lua glfw gl3w ${OPENGL_LIBRARY})
 
 set(shader_files
-  debug.frag.glsl
-
   geometry.glsl
   vertex.glsl
+
+  sand.frag.glsl
+  water.frag.glsl
 )
 
 set(lua_files
   main.lua
+  utils.lua
 
-  debug.lua
+  sand.lua
+  water.lua
 )
 
 foreach(shader ${shader_files})
