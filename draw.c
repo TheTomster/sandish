@@ -10,6 +10,10 @@
 #include "screen.h"
 #include "utils.h"
 
+#define FRUSTUM_SCALE   1.0
+#define FRUSTUM_NEAR    0.5
+#define FRUSTUM_FAR     30.0
+
 static screen_handle screen;
 static board_handle board;
 static cam_handle cam;
@@ -23,7 +27,9 @@ static GLuint gshader;
 static GLuint vshader;
 static GLuint * fshaders;
 static GLuint * programs;
-static double cube_size;
+static GLfloat cube_size;
+
+static GLfloat perspective_matrix[16];
 
 static void init_pos_buffer(board_handle b);
 static void init_shaders();
@@ -43,6 +49,10 @@ void draw_init(
 void draw_board() {
   update_buckets();
 
+  // convert the camera's orientation into a matrix
+  GLfloat cam_matrix[16];
+  cam_get_matrix(cam_matrix, cam);
+
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -53,16 +63,22 @@ void draw_board() {
     // select appropriate shader program
     GLuint program = programs[i];
     glUseProgram(program);
+    // set perspective matrix uniform
+    GLint persp_mat_uni = glGetUniformLocation(program, "perspective_matrix");
+    if (persp_mat_uni == -1) {
+      printf("Warning: error setting perspective matrix uniform.\n");
+    }
+    glUniformMatrix4fv(persp_mat_uni, 1, GL_FALSE, perspective_matrix);
+    // set camera matrix uniform
+    GLint cam_mat_uni = glGetUniformLocation(program, "cam_matrix");
+    if (cam_mat_uni == -1)
+      printf("Warning: error setting cube size uniform.\n");
+    glUniformMatrix4fv(cam_mat_uni, 1, GL_FALSE, cam_matrix);
     // set cube size uniform
     GLint cube_size_uni = glGetUniformLocation(program, "cube_size");
     if (cube_size_uni == -1)
       printf("Warning: error setting cube size uniform.\n");
     glUniform1f(cube_size_uni, cube_size);
-    // set aspect ratio uniform
-    GLint aspect_uni = glGetUniformLocation(program, "aspect_ratio");
-    if (aspect_uni == -1)
-      printf("Warning: error setting aspect ratio uniform.\n");
-    glUniform1f(aspect_uni, 1.0 / screen_aspect_ratio(screen));
     // Set up vertex positions
     GLint position_attrib = glGetAttribLocation(program, "position");
     glBindBuffer(GL_ARRAY_BUFFER, position_buffer);
@@ -89,6 +105,34 @@ void draw_board() {
     // Delete that buffer
     glDeleteBuffers(1, &index_buffer);
   }
+  //TODO Draw Cursor
+}
+
+void draw_setup_perspective(GLfloat aspect_ratio) {
+  for (int i = 0; i < 16; i++) {
+    GLfloat x;
+    switch (i) {
+      case 0:
+        x = FRUSTUM_SCALE / aspect_ratio;
+        break;
+      case 5:
+        x = FRUSTUM_SCALE;
+        break;
+      case 10:
+        x = (FRUSTUM_FAR + FRUSTUM_NEAR) / (FRUSTUM_NEAR - FRUSTUM_FAR);
+        break;
+      case 11:
+        x = -1;
+        break;
+      case 14:
+        x = 2 * FRUSTUM_FAR * FRUSTUM_NEAR / (FRUSTUM_NEAR - FRUSTUM_FAR);
+        break;
+      default:
+        x = 0;
+        break;
+    }
+    perspective_matrix[i] = x;
+  }
 }
 
 static void init_pos_buffer(board_handle b) {
@@ -101,7 +145,7 @@ static void init_pos_buffer(board_handle b) {
   glBufferData(
       GL_ARRAY_BUFFER, buffer_size * sizeof(GLfloat) * 3,
       NULL, GL_STATIC_DRAW);
-  float * map = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+  GLfloat * map = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
   if (map == NULL)
     panic("Unable to map buffer to application memory.");
   unsigned int i = 0;
@@ -136,7 +180,7 @@ static void init_shaders() {
   }
 }
 
-void update_buckets() {
+static void update_buckets() {
   // Create a bucket for each possible data value.
   if (buckets != NULL) {
     for (int i = 0; i < list_size(buckets); i++) {

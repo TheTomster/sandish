@@ -10,7 +10,7 @@ static unsigned int get_index(
 
 struct board {
   vec4 world_center; // world coords of centerpoint
-  double world_size;
+  GLfloat world_size;
   // number of cells in the board. (a value of 30 here makes a 30x30x30 cube)
   unsigned int board_size;
   unsigned int max_index;
@@ -20,7 +20,7 @@ struct board {
 };
 
 board_handle board_new(
-    vec4 world_center, double world_size, unsigned int board_size) {
+    vec4 world_center, GLfloat world_size, unsigned int board_size) {
   board_handle b = malloc(sizeof(struct board));
   if (b == NULL)
     panic("Error allocating board memory!");
@@ -38,8 +38,8 @@ board_handle board_new(
   }
   // compute the mapping from 0,0,0 in board coords to world coords
   {
-    double x, y, z;
-    double halfsize = b->world_size / 2;
+    GLfloat x, y, z;
+    GLfloat halfsize = b->world_size / 2;
     x = b->world_center.x - halfsize;
     y = b->world_center.y - halfsize;
     z = b->world_center.z - halfsize;
@@ -59,7 +59,7 @@ vec4 board_get_world_center(board_handle b) {
   return b->world_center;
 }
 
-double board_get_world_size(board_handle b) {
+GLfloat board_get_world_size(board_handle b) {
   return b->world_size;
 }
 
@@ -67,7 +67,7 @@ vec4 board_get_world_origin(board_handle b) {
   return b->world_origin;
 }
 
-double board_get_world_particle_step(board_handle b) {
+GLfloat board_get_world_particle_step(board_handle b) {
   return b->world_size / b->board_size;
 }
 

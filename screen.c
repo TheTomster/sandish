@@ -5,7 +5,7 @@
 struct screen {
   int width;
   int height;
-  float aspect_ratio;
+  GLfloat aspect_ratio;
 };
 
 screen_handle screen_new() {
@@ -29,7 +29,7 @@ int screen_width(screen_handle s) {
   return s->height;
 }
 
-float screen_aspect_ratio(screen_handle s) {
+GLfloat screen_aspect_ratio(screen_handle s) {
   return s->aspect_ratio;
 }
 

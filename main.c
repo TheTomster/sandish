@@ -31,8 +31,10 @@ int main(void) {
   int ok = glfwInit();
   if (!ok)
     panic("Error initializing GLFW!");
+  GLFWvidmode vm;
+  glfwGetDesktopMode(&vm);
   ok = glfwOpenWindow(
-      WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, 0, 0, 8, 0, GLFW_WINDOW);
+      vm.Width, vm.Height, 0, 0, 0, 0, 8, 0, GLFW_FULLSCREEN);
   if (!ok)
     panic ("Error opening window!");
   if (gl3wInit())
@@ -41,14 +43,18 @@ int main(void) {
   glfwSwapInterval(1);
   glfwSwapBuffers();
 
+  glfwDisable(GLFW_MOUSE_CURSOR);
+  glfwSetMousePos(0, 0);
+
   screen = screen_new();
   glfwSetWindowSizeCallback(&on_resize);
 
   cam_handle c;
   { // camera initialization
-    vec4 pos = {0, 0, -10, 1};
-    vec4 rot = {0, 0, 0, 1};
-    c = cam_new(pos, rot);
+    vec4 pos = {0, 0, 0, 1};
+    GLfloat rx = 0;
+    GLfloat ry = 0;
+    c = cam_new(pos, rx, ry);
   }
 
   board_handle b;
@@ -60,7 +66,7 @@ int main(void) {
   registry_handle r;
   r = registry_new ();
 
-  tick_init(b);
+  tick_init(b, c);
 
   lualink_init(b, r);
   lualink_load_main();
@@ -82,4 +88,5 @@ int main(void) {
 static void on_resize(int width, int height) {
   screen_set_size(screen, width, height);
   glViewport(0, 0, width, height);
+  draw_setup_perspective(screen_aspect_ratio(screen));
 }

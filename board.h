@@ -7,17 +7,17 @@
 typedef struct board* board_handle;
 
 board_handle board_new(
-    vec4 world_center, double world_size, unsigned int board_size);
+    vec4 world_center, GLfloat world_size, unsigned int board_size);
 
 void board_delete(board_handle b);
 
 vec4 board_get_world_center(board_handle b);
 
-double board_get_world_size(board_handle b);
+GLfloat board_get_world_size(board_handle b);
 
 vec4 board_get_world_origin(board_handle b);
 
-double board_get_world_particle_step(board_handle b);
+GLfloat board_get_world_particle_step(board_handle b);
 
 unsigned int board_get_board_size(board_handle b);
 

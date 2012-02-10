@@ -11,10 +11,13 @@ add_executable(sandish
   list.c
   lualink.c
   main.c
+  matrix.c
+  panic.c
   registry.c
   screen.c
   tick.c
   utils.c
+  vec4.c
 )
 
 target_link_libraries(sandish lua glfw gl3w ${OPENGL_LIBRARY})

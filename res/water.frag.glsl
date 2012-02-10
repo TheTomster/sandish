@@ -1,10 +1,10 @@
 #version 150
 
 in frag {
-  float depth;
+  float rand;
 } i;
 
 void main() {
-  float intensity = smoothstep(-9.5, -4.5, i.depth);
+  float intensity = 0.6 + (0.4 * i.rand);
   gl_FragColor = vec4(0, 0, intensity, 1.0f);
 }

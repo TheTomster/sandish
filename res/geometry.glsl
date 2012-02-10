@@ -1,40 +1,42 @@
 #version 150
 
 uniform float cube_size;
-uniform float aspect_ratio;
+uniform mat4 cam_matrix;
+uniform mat4 perspective_matrix;
 
 layout(points) in;
 layout(triangle_strip, max_vertices=14) out;
 
 in geo {
-  float depth;
+  float rand;
 } i[];
 
 out frag {
-  float depth;
+  float rand;
 } o;
 
 vec4 cube_strip[14] = vec4[14](
-  vec4(1 * aspect_ratio, 1, 1, 1),
-  vec4(0 * aspect_ratio, 1, 1, 1),
-  vec4(1 * aspect_ratio, 0, 1, 1),
-  vec4(0 * aspect_ratio, 0, 1, 1),
-  vec4(0 * aspect_ratio, 0, 0, 1),
-  vec4(0 * aspect_ratio, 1, 1, 1),
-  vec4(0 * aspect_ratio, 1, 0, 1),
-  vec4(1 * aspect_ratio, 1, 1, 1),
-  vec4(1 * aspect_ratio, 1, 0, 1),
-  vec4(1 * aspect_ratio, 0, 1, 1),
-  vec4(1 * aspect_ratio, 0, 0, 1),
-  vec4(0 * aspect_ratio, 0, 0, 1),
-  vec4(0 * aspect_ratio, 0, 1, 1),
-  vec4(0 * aspect_ratio, 1, 0, 1)
+  perspective_matrix * cam_matrix * vec4( 1,  1,  1,  1),
+  perspective_matrix * cam_matrix * vec4(-1,  1,  1,  1),
+  perspective_matrix * cam_matrix * vec4( 1, -1,  1,  1),
+  perspective_matrix * cam_matrix * vec4(-1, -1,  1,  1),
+  perspective_matrix * cam_matrix * vec4(-1, -1, -1,  1),
+  perspective_matrix * cam_matrix * vec4(-1,  1,  1,  1),
+  perspective_matrix * cam_matrix * vec4(-1,  1, -1,  1),
+  perspective_matrix * cam_matrix * vec4( 1,  1,  1,  1),
+  perspective_matrix * cam_matrix * vec4( 1,  1, -1,  1),
+  perspective_matrix * cam_matrix * vec4( 1, -1,  1,  1),
+  perspective_matrix * cam_matrix * vec4( 1, -1, -1,  1),
+  perspective_matrix * cam_matrix * vec4(-1, -1, -1,  1),
+  perspective_matrix * cam_matrix * vec4(-1, -1,  1,  1),
+  perspective_matrix * cam_matrix * vec4(-1,  1, -1,  1)
 );
 
 void main() {
+  float cube_size_m = cube_size - 0.001;
   for (int x = 0; x < 14; x++) {
-    gl_Position = gl_in[0].gl_Position + (cube_strip[x] * cube_size);
-    o.depth = i[0].depth;
+    gl_Position = gl_in[0].gl_Position + (cube_strip[x] * (cube_size_m / 2));
+    o.rand = i[0].rand;
     EmitVertex();
   }
 }

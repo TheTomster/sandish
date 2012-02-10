@@ -1,25 +1,26 @@
 #version 150
 
-const float camera_near = 0.1;
+const float camera_near = 0.5;
 const float camera_far = 30.0;
 
 in vec4 position;
 
-uniform float aspect_ratio;
+uniform mat4 cam_matrix;
+uniform mat4 perspective_matrix;
 
 out geo {
-  float depth;
+  float rand;
 } o;
 
 void main() {
-  vec4 dev_space;
-  dev_space.x = position.x * aspect_ratio;
-  dev_space.y = position.y;
-  dev_space.z =
-      position.z * (camera_near + camera_far) / (camera_near - camera_far);
-  dev_space.z += 2.0 * camera_near * camera_far / (camera_near - camera_far);
-  dev_space.w = -position.z;
+  // Generate random noise
+  // One-line RNG from
+  // http://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
+  float a = position.x * position.z;
+  float b = position.y * position.z;
+  float r = fract(sin(dot(vec2(a, b), vec2(12.9898, 78.233))) * 43758.5453);
 
-  gl_Position = dev_space;
-  o.depth = position.z;
+  position = perspective_matrix * cam_matrix * position;
+  o.rand = r;
+  gl_Position = position;
 }

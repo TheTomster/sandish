@@ -33,7 +33,7 @@ function main()
   local timer = tick.getTime()
   local fps = 60
   while exited == 0 do
-    local time_up = (tick.getTime() - timer) > (1.0/30.0)
+    local time_up = (tick.getTime() - timer) > (1.0/40.0)
     if time_up then
       timer = tick.getTime()
       board.setN(16, 32, 16, d1)
