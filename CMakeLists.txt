@@ -27,6 +27,7 @@ set(shader_files
   geometry.glsl
   vertex.glsl
 
+  concrete.frag.glsl
   sand.frag.glsl
   water.frag.glsl
 )
@@ -35,6 +36,7 @@ set(lua_files
   main.lua
   utils.lua
 
+  concrete.lua
   sand.lua
   water.lua
 )

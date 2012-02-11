@@ -14,7 +14,7 @@
 #include "screen.h"
 #include "tick.h"
 
-#define FULLSCREEN          0
+#define FULLSCREEN          1
 #define WINDOW_WIDTH        800
 #define WINDOW_HEIGHT       600
 #define WINDOW_TITLE        "Sandish"

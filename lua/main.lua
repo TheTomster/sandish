@@ -22,22 +22,27 @@ function newRule(shader, script)
 end
 
 function registry.init()
-  d1 = newRule("res/sand.frag.glsl", "lua/sand.lua")
-  d2 = newRule("res/water.frag.glsl", "lua/water.lua")
+  newRule("res/sand.frag.glsl", "lua/sand.lua")
+  newRule("res/water.frag.glsl", "lua/water.lua")
+  concrete_dv = newRule("res/concrete.frag.glsl", "lua/concrete.lua")
 end
 
 
 function main()
+  -- Init the board to have concrete on the bottom layer
+  for x = 1, board.size do
+    for z = 1, board.size do
+      board.setN(x, 1, z, concrete_dv)
+    end
+  end
   -- Enter mainloop
   local exited = 0
   local timer = tick.getTime()
   local fps = 60
   while exited == 0 do
-    local time_up = (tick.getTime() - timer) > (1.0/40.0)
+    local time_up = (tick.getTime() - timer) > (1.0/30.0)
     if time_up then
       timer = tick.getTime()
-      board.setN(16, 32, 16, d1)
-      board.setN(8, 32, 16, d2)
       for x = 1, board.size do
         for y = 1, board.size do
           for z = 1, board.size do

@@ -94,5 +94,7 @@ static void handle_inputs() {
       cursor_set_selected(cursor, 1);
     if (glfwGetKey('2'))
       cursor_set_selected(cursor, 2);
+    if (glfwGetKey('3'))
+      cursor_set_selected(cursor, 3);
   }
 }
