@@ -81,6 +81,13 @@ static void handle_inputs() {
     cam_set_pos(camera, pos);
   }
   { // handle mouse clicks
+    if (
+        glfwGetMouseButton(GLFW_MOUSE_BUTTON_LEFT) &&
+        cursor_in_board(cursor)) {
+      vec4 cpos = cursor_get_board_pos(cursor);
+      board_set_next(
+          board, cpos.x, cpos.y, cpos.z, cursor_get_selected(cursor));
+    }
   }
   { // handle keyboard block selection
     if (glfwGetKey('1'))
