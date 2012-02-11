@@ -73,7 +73,9 @@ GLuint make_program(
     fprintf(stderr, "Error creating program\n");
     return 0;
   }
-  glAttachShader(program, geom_shader);
+  if (geom_shader != 0) {
+    glAttachShader(program, geom_shader);
+  }
   glAttachShader(program, vertex_shader);
   glAttachShader(program, fragment_shader);
   glLinkProgram(program);

@@ -14,6 +14,7 @@
 #include "screen.h"
 #include "tick.h"
 
+#define FULLSCREEN          0
 #define WINDOW_WIDTH        800
 #define WINDOW_HEIGHT       600
 #define WINDOW_TITLE        "Sandish"
@@ -33,8 +34,13 @@ int main(void) {
     panic("Error initializing GLFW!");
   GLFWvidmode vm;
   glfwGetDesktopMode(&vm);
-  ok = glfwOpenWindow(
-      vm.Width, vm.Height, 0, 0, 0, 0, 8, 0, GLFW_FULLSCREEN);
+  if (FULLSCREEN) {
+    ok = glfwOpenWindow(
+        vm.Width, vm.Height, 0, 0, 0, 0, 8, 0, GLFW_FULLSCREEN);
+  } else {
+    ok = glfwOpenWindow(
+        WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, 0, 0, 8, 0, GLFW_WINDOW);
+  }
   if (!ok)
     panic ("Error opening window!");
   if (gl3wInit())
@@ -63,18 +69,20 @@ int main(void) {
     b = board_new(center, BOARD_WORLD_SIZE, BOARD_SIZE);
   }
 
+  cursor_handle cu;
+  cu = cursor_new(c, b);
+  cursor_update(cu);
+
   registry_handle r;
   r = registry_new ();
 
-  tick_init(b, c);
+  tick_init(b, c, cu);
 
   lualink_init(b, r);
   lualink_load_main();
   lualink_init_registry();
 
-  printf("Loading...\n");
-  draw_init(screen, b, c, r);
-  printf("Done.\n");
+  draw_init(screen, b, c, r, cu);
 
   lualink_enter_main();
 

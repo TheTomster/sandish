@@ -3,6 +3,7 @@
 
 #include "board.h"
 #include "cam.h"
+#include "cursor.h"
 #include "draw.h"
 #include "list.h"
 #include "panic.h"
@@ -10,14 +11,20 @@
 #include "screen.h"
 #include "utils.h"
 
+#define VERTEX_SHADER_FILE  "res/vertex.glsl"
+#define GEO_SHADER_FILE     "res/geometry.glsl"
+#define CURSOR_GSHADER_FILE "res/cursor.geo.glsl"
+#define CURSOR_FSHADER_FILE "res/cursor.frag.glsl"
+
 #define FRUSTUM_SCALE   1.0
-#define FRUSTUM_NEAR    0.5
+#define FRUSTUM_NEAR    0.01
 #define FRUSTUM_FAR     30.0
 
 static screen_handle screen;
 static board_handle board;
 static cam_handle cam;
 static registry_handle registry;
+static cursor_handle cursor;
 
 static list_handle buckets;
 
@@ -33,15 +40,17 @@ static GLfloat perspective_matrix[16];
 
 static void init_pos_buffer(board_handle b);
 static void init_shaders();
-
 static void update_buckets();
+static void set_uniforms();
 
 void draw_init(
-    screen_handle s, board_handle b, cam_handle c, registry_handle r) {
+    screen_handle s, board_handle b, cam_handle c, registry_handle r,
+    cursor_handle cu) {
   screen = s;
   board = b;
   cam = c;
   registry = r;
+  cursor = cu;
   init_pos_buffer(b);
   init_shaders();
 }
@@ -63,22 +72,7 @@ void draw_board() {
     // select appropriate shader program
     GLuint program = programs[i];
     glUseProgram(program);
-    // set perspective matrix uniform
-    GLint persp_mat_uni = glGetUniformLocation(program, "perspective_matrix");
-    if (persp_mat_uni == -1) {
-      printf("Warning: error setting perspective matrix uniform.\n");
-    }
-    glUniformMatrix4fv(persp_mat_uni, 1, GL_FALSE, perspective_matrix);
-    // set camera matrix uniform
-    GLint cam_mat_uni = glGetUniformLocation(program, "cam_matrix");
-    if (cam_mat_uni == -1)
-      printf("Warning: error setting cube size uniform.\n");
-    glUniformMatrix4fv(cam_mat_uni, 1, GL_FALSE, cam_matrix);
-    // set cube size uniform
-    GLint cube_size_uni = glGetUniformLocation(program, "cube_size");
-    if (cube_size_uni == -1)
-      printf("Warning: error setting cube size uniform.\n");
-    glUniform1f(cube_size_uni, cube_size);
+    set_uniforms(program, cam_matrix);
     // Set up vertex positions
     GLint position_attrib = glGetAttribLocation(program, "position");
     glBindBuffer(GL_ARRAY_BUFFER, position_buffer);
@@ -105,7 +99,22 @@ void draw_board() {
     // Delete that buffer
     glDeleteBuffers(1, &index_buffer);
   }
-  //TODO Draw Cursor
+  // draw cursor
+  if (cursor_in_board(cursor)) {
+    // get position index from cursor board position
+    vec4 cur_pos = cursor_get_board_pos(cursor);
+    unsigned int index = board_get_index(board, cur_pos.x, cur_pos.y, cur_pos.z);
+    // Draw a cube with that index
+    GLuint cursor_program = programs[cursor_get_selected(cursor) - 1];
+    glUseProgram(cursor_program);
+    set_uniforms(cursor_program, cam_matrix);
+    glBindBuffer(GL_ARRAY_BUFFER, position_buffer);
+    GLint position_attrib = glGetAttribLocation(cursor_program, "position");
+    glVertexAttribPointer(position_attrib, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glEnableVertexAttribArray(position_attrib);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glDrawElements(GL_POINTS, 1, GL_UNSIGNED_INT, &index);
+  }
 }
 
 void draw_setup_perspective(GLfloat aspect_ratio) {
@@ -163,10 +172,10 @@ static void init_pos_buffer(board_handle b) {
 }
 
 static void init_shaders() {
-  vshader = make_shader(GL_VERTEX_SHADER, "res/vertex.glsl");
+  vshader = make_shader(GL_VERTEX_SHADER, VERTEX_SHADER_FILE);
   if (vshader == 0)
     panic("Failed to set up vertex shader.");
-  gshader = make_shader(GL_GEOMETRY_SHADER, "res/geometry.glsl");
+  gshader = make_shader(GL_GEOMETRY_SHADER, GEO_SHADER_FILE);
   if (gshader == 0)
     panic("Failed to set up geometry shader.");
   // load and compile each fragment shader, build a program from it, and add
@@ -176,7 +185,9 @@ static void init_shaders() {
   for (int i = 0; i < registry_size(registry); i++) {
     fshaders[i] = make_shader(
         GL_FRAGMENT_SHADER, registry_get(registry, i + 1));
-    programs[i] = make_program(gshader, vshader, fshaders[i]);
+    programs[i] = make_program(vshader, gshader, fshaders[i]);
+    if (programs[i] == 0)
+      panic("Failed to create program.");
   }
 }
 
@@ -206,4 +217,23 @@ static void update_buckets() {
       list_push(bucket, i_entry);
     }
   }
+}
+
+static void set_uniforms(GLuint program, GLfloat * cam_matrix) {
+  // set perspective matrix uniform
+  GLint persp_mat_uni = glGetUniformLocation(program, "perspective_matrix");
+  if (persp_mat_uni == -1) {
+    printf("Warning: error setting perspective matrix uniform.\n");
+  }
+  glUniformMatrix4fv(persp_mat_uni, 1, GL_FALSE, perspective_matrix);
+  // set camera matrix uniform
+  GLint cam_mat_uni = glGetUniformLocation(program, "cam_matrix");
+  if (cam_mat_uni == -1)
+    printf("Warning: error setting cube size uniform.\n");
+  glUniformMatrix4fv(cam_mat_uni, 1, GL_FALSE, cam_matrix);
+  // set cube size uniform
+  GLint cube_size_uni = glGetUniformLocation(program, "cube_size");
+  if (cube_size_uni == -1)
+    printf("Warning: error setting cube size uniform.\n");
+  glUniform1f(cube_size_uni, cube_size);
 }

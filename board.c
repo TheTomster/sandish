@@ -5,9 +5,6 @@
 #include "board.h"
 #include "panic.h"
 
-static unsigned int get_index(
-    board_handle b, unsigned int x, unsigned int y, unsigned int z);
-
 struct board {
   vec4 world_center; // world coords of centerpoint
   GLfloat world_size;
@@ -86,20 +83,20 @@ const unsigned int * board_get_buffer(board_handle b) {
 
 const unsigned int board_get_existing(
     board_handle b, unsigned int x, unsigned int y, unsigned int z) {
-  unsigned int i = get_index(b, x, y, z);
+  unsigned int i = board_get_index(b, x, y, z);
   return b->data_e[i];
 }
 
 const unsigned int board_get_next(
     board_handle b, unsigned int x, unsigned int y, unsigned int z) {
-  unsigned int i = get_index(b, x, y, z);
+  unsigned int i = board_get_index(b, x, y, z);
   return b->data_n[i];
 }
 
 void board_set_next(
     board_handle b, unsigned int x, unsigned int y, unsigned int z,
     unsigned int data) {
-  unsigned int i = get_index(b, x, y, z);
+  unsigned int i = board_get_index(b, x, y, z);
   b->data_n[i] = data;
 }
 
@@ -114,7 +111,7 @@ void board_swap_buffers(board_handle b) {
   }
 }
 
-static unsigned int get_index(
+unsigned int board_get_index(
     board_handle b, unsigned int x, unsigned int y, unsigned int z) {
   unsigned int bs = b->board_size;
   unsigned int i =  x * bs * bs + y * bs + z;

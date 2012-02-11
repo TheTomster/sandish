@@ -5,6 +5,7 @@
 
 #include "board.h"
 #include "cam.h"
+#include "cursor.h"
 #include "draw.h"
 #include "matrix.h"
 #include "tick.h"
@@ -14,12 +15,14 @@
 
 static board_handle board;
 static cam_handle camera;
+static cursor_handle cursor;
 
 static void handle_inputs();
 
-void tick_init(board_handle b, cam_handle c) {
+void tick_init(board_handle b, cam_handle c, cursor_handle cu) {
   board = b;
   camera = c;
+  cursor = cu;
 }
 
 int tick(int swap) {
@@ -38,12 +41,13 @@ int tick(int swap) {
 }
 
 static void handle_inputs() {
-  { // handle mouse stuff
+  { // handle mouse movement
     int x, y;
     glfwGetMousePos(&x, &y);
     glfwSetMousePos(0, 0);
 
     cam_rotate(camera, y * ANGLE_DAMPING, x * ANGLE_DAMPING);
+    cursor_update(cursor);
   }
   { // handle keyboard stuff
     GLfloat x = 0;
@@ -75,5 +79,13 @@ static void handle_inputs() {
     pos.y += trans_vec.y;
     pos.z += trans_vec.z;
     cam_set_pos(camera, pos);
+  }
+  { // handle mouse clicks
+  }
+  { // handle keyboard block selection
+    if (glfwGetKey('1'))
+      cursor_set_selected(cursor, 1);
+    if (glfwGetKey('2'))
+      cursor_set_selected(cursor, 2);
   }
 }

@@ -36,3 +36,6 @@ void board_set_next(
     unsigned int data);
 
 void board_swap_buffers(board_handle b);
+
+unsigned int board_get_index(
+    board_handle b, unsigned int x, unsigned int y, unsigned int z);

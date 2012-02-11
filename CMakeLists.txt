@@ -7,6 +7,7 @@ project(sandish)
 add_executable(sandish
   board.c
   cam.c
+  cursor.c
   draw.c
   list.c
   lualink.c
