@@ -5,7 +5,7 @@
 
 typedef struct screen* screen_handle;
 
-screen_handle screen_new();
+screen_handle screen_new(void);
 
 void screen_delete(screen_handle s);
 

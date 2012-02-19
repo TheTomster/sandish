@@ -13,11 +13,13 @@
 #define MOVEMENT_DAMPING 0.05
 #define ANGLE_DAMPING 0.001
 
+#define FULLSCREEN
+
 static board_handle board;
 static cam_handle camera;
 static cursor_handle cursor;
 
-static void handle_inputs();
+static void handle_inputs(void);
 
 void tick_init(board_handle b, cam_handle c, cursor_handle cu) {
   board = b;
@@ -43,8 +45,13 @@ int tick(int swap) {
 static void handle_inputs() {
   { // handle mouse movement
     int x, y;
+    #ifdef FULLSCREEN
     glfwGetMousePos(&x, &y);
     glfwSetMousePos(0, 0);
+    #else
+    x = 0;
+    y = 0;
+    #endif
 
     cam_rotate(camera, y * ANGLE_DAMPING, x * ANGLE_DAMPING);
     cursor_update(cursor);

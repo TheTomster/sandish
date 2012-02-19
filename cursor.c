@@ -52,11 +52,11 @@ vec4 cursor_get_board_pos(cursor_handle c) {
 
 int cursor_in_board(cursor_handle c) {
   unsigned int s = board_get_board_size(c->board);
-  if (c->board_pos.x < 0 || c->board_pos.x > s)
+  if (c->board_pos.x < 0 || c->board_pos.x > s - 1)
     return 0;
-  if (c->board_pos.y < 0 || c->board_pos.y > s)
+  if (c->board_pos.y < 0 || c->board_pos.y > s - 1)
     return 0;
-  if (c->board_pos.z < 0 || c->board_pos.z > s)
+  if (c->board_pos.z < 0 || c->board_pos.z > s - 1)
     return 0;
   return 1;
 }

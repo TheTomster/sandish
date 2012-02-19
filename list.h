@@ -2,7 +2,7 @@
 
 typedef struct list * list_handle;
 
-list_handle list_new();
+list_handle list_new(void);
 
 void list_delete(list_handle l);
 

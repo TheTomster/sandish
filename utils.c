@@ -4,6 +4,8 @@
 
 #include "utils.h"
 
+#define FRAG_UTIL_FILENAME "res/util.frag.glsl"
+
 GLuint make_buffer(
     GLenum target, GLsizei buffer_size, const void * buffer_data,
     GLenum buffer_usage) {
@@ -24,23 +26,32 @@ const char * load_file(const char * filename, GLint * length) {
     fprintf(stderr, "Unable to open %s for reading.\n", filename);
     return NULL;
   }
+  GLint len;
   fseek(fd, 0, SEEK_END);
-  *length = ftell(fd);
+  len = ftell(fd);
   fseek(fd, 0, SEEK_SET);
-  char * buffer = malloc(*length + 1);
-  *length = fread(buffer, 1, *length, fd);
+  char * buffer = malloc(len + 1);
+  len = fread(buffer, 1, len, fd);
   fclose(fd);
-  buffer[*length] = '\0';
+  buffer[len] = '\0';
+  if (length != NULL) {
+    *length = len;
+  }
   return buffer;
 }
 
-GLuint make_shader(GLenum type, const char * filename) {
+GLuint make_shader(GLenum type, const char * filename, int link_utils) {
   GLuint shader;
   shader = glCreateShader(type);
 
-  GLint source_len;
-  const char * source = load_file(filename, &source_len);
-  glShaderSource(shader, 1, &source, NULL);
+  const char * sources[2];
+  if (link_utils) {
+    sources[0] = load_file(FRAG_UTIL_FILENAME, NULL);
+  }
+  sources[1] = load_file(filename, NULL);
+  int n = link_utils? 2: 1;
+  int i = link_utils? 0: 1;
+  glShaderSource(shader, n, &sources[i], NULL);
   int ok = compile_shader(shader);
   if (!ok)
     return 0;
@@ -67,7 +78,7 @@ int compile_shader(GLuint shader) {
 }
 
 GLuint make_program(
-    GLuint geom_shader, GLuint vertex_shader, GLuint fragment_shader) {
+    GLuint vertex_shader, GLuint geom_shader, GLuint fragment_shader) {
   GLuint program = glCreateProgram();
   if (program == 0) {
     fprintf(stderr, "Error creating program\n");

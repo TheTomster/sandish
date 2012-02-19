@@ -26,10 +26,14 @@ target_link_libraries(sandish lua glfw gl3w ${OPENGL_LIBRARY})
 set(shader_files
   geometry.glsl
   vertex.glsl
+  util.frag.glsl
 
   concrete.frag.glsl
   sand.frag.glsl
   water.frag.glsl
+
+  ssao/fragment.glsl
+  ssao/vertex.glsl
 )
 
 set(lua_files

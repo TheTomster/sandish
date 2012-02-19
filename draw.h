@@ -13,6 +13,6 @@ void draw_init(
     screen_handle s, board_handle b, cam_handle c, registry_handle r,
     cursor_handle cu);
 
-void draw_board();
+void draw_board(void);
 
 void draw_setup_perspective(GLfloat aspect_ratio);

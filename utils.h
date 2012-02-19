@@ -6,9 +6,11 @@ GLuint make_buffer(
 
 const char * load_file(const char * filename, GLint * length);
 
-GLuint make_shader(GLenum type, const char * filename);
+GLuint make_shader(GLenum type, const char * filename, int link_utils);
 
 int compile_shader(GLuint shader);
 
+// returns the name of a program linked from the given shader objects.
+// if geom_shader is 0, it will be skipped.
 GLuint make_program(
-    GLuint geom_shader, GLuint vertex_shader, GLuint fragment_shader);
+    GLuint vertex_shader, GLuint geom_shader, GLuint fragment_shader);

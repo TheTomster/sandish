@@ -59,6 +59,6 @@ function main()
     end
     exited = tick.tick(time_up)
     fps = (1 / (tick.getTime() - timer)) * 0.1 + 0.9 * fps
-    print("FPS: "..fps)
+    --print("FPS: "..fps)
   end
 end

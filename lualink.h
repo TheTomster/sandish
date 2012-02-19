@@ -5,8 +5,8 @@
 
 void lualink_init(board_handle b, registry_handle r);
 
-void lualink_load_main();
+void lualink_load_main(void);
 
-void lualink_enter_main();
+void lualink_enter_main(void);
 
-void lualink_init_registry();
+void lualink_init_registry(void);

@@ -13,12 +13,12 @@
 
 #define VERTEX_SHADER_FILE  "res/vertex.glsl"
 #define GEO_SHADER_FILE     "res/geometry.glsl"
-#define CURSOR_GSHADER_FILE "res/cursor.geo.glsl"
-#define CURSOR_FSHADER_FILE "res/cursor.frag.glsl"
+#define SSAO_VSHADER_FILE   "res/ssao/vertex.glsl"
+#define SSAO_FSHADER_FILE   "res/ssao/fragment.glsl"
 
 #define FRUSTUM_SCALE   1.0
 #define FRUSTUM_NEAR    0.01
-#define FRUSTUM_FAR     30.0
+#define FRUSTUM_FAR     15.0
 
 static screen_handle screen;
 static board_handle board;
@@ -36,12 +36,32 @@ static GLuint * fshaders;
 static GLuint * programs;
 static GLfloat cube_size;
 
+static GLuint ssao_vert_buffer;
+static GLfloat ssao_vertices[8] = {
+  -1, -1,
+  -1, 1,
+  1, -1,
+  1, 1,
+};
+static GLuint ssao_vshader;
+static GLuint ssao_fshader;
+static GLuint ssao_program;
+
 static GLfloat perspective_matrix[16];
 
+static GLuint geo_tex;
+static GLuint pos_tex;
+static GLuint norm_tex;
+static GLuint mrt_fb;
+static GLuint mrt_depthbuffer;
+
 static void init_pos_buffer(board_handle b);
-static void init_shaders();
-static void update_buckets();
-static void set_uniforms();
+static void init_ssao_buffer(void);
+static void init_shaders(void);
+static void init_mrt(void);
+static void update_buckets(void);
+static void set_uniforms(
+    GLuint program, GLfloat *cam_matrix, GLfloat *cam_rot_matrix);
 
 void draw_init(
     screen_handle s, board_handle b, cam_handle c, registry_handle r,
@@ -52,7 +72,9 @@ void draw_init(
   registry = r;
   cursor = cu;
   init_pos_buffer(b);
+  init_ssao_buffer();
   init_shaders();
+  init_mrt();
 }
 
 void draw_board() {
@@ -61,6 +83,13 @@ void draw_board() {
   // convert the camera's orientation into a matrix
   GLfloat cam_matrix[16];
   cam_get_matrix(cam_matrix, cam);
+  GLfloat cam_rot_matrix[16];
+  cam_get_rot_mat(cam_rot_matrix, cam);
+
+  glBindFramebuffer(GL_FRAMEBUFFER, mrt_fb);
+  GLuint drawbuffers[3] = {
+      GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
+  glDrawBuffers(3, drawbuffers);
 
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -72,7 +101,7 @@ void draw_board() {
     // select appropriate shader program
     GLuint program = programs[i];
     glUseProgram(program);
-    set_uniforms(program, cam_matrix);
+    set_uniforms(program, cam_matrix, cam_rot_matrix);
     // Set up vertex positions
     GLint position_attrib = glGetAttribLocation(program, "position");
     glBindBuffer(GL_ARRAY_BUFFER, position_buffer);
@@ -99,6 +128,7 @@ void draw_board() {
     // Delete that buffer
     glDeleteBuffers(1, &index_buffer);
   }
+
   // draw cursor
   if (cursor_in_board(cursor)) {
     // get position index from cursor board position
@@ -107,13 +137,49 @@ void draw_board() {
     // Draw a cube with that index
     GLuint cursor_program = programs[cursor_get_selected(cursor) - 1];
     glUseProgram(cursor_program);
-    set_uniforms(cursor_program, cam_matrix);
+    set_uniforms(cursor_program, cam_matrix, cam_rot_matrix);
     glBindBuffer(GL_ARRAY_BUFFER, position_buffer);
     GLint position_attrib = glGetAttribLocation(cursor_program, "position");
     glVertexAttribPointer(position_attrib, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(position_attrib);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glDrawElements(GL_POINTS, 1, GL_UNSIGNED_INT, &index);
+  }
+
+  // Switch to screen rendering
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glDisable(GL_DEPTH_TEST);
+
+  { // Do another pass to render SSAO to screen
+    // set up program
+    glUseProgram(ssao_program);
+
+    // set up vertices
+    glBindBuffer(GL_ARRAY_BUFFER, ssao_vert_buffer);
+    GLint position_attrib = glGetAttribLocation(ssao_program, "position");
+    glVertexAttribPointer(position_attrib, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+    glEnableVertexAttribArray(position_attrib);
+
+    // set up textures
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, geo_tex);
+    GLint geo_samp_uni = glGetUniformLocation(ssao_program, "geo_samp");
+    glUniform1i(geo_samp_uni, 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, pos_tex);
+    GLint pos_samp_uni = glGetUniformLocation(ssao_program, "pos_samp");
+    glUniform1i(pos_samp_uni, 1);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, norm_tex);
+    GLint norm_samp_uni = glGetUniformLocation(ssao_program, "norm_samp");
+    glUniform1i(norm_samp_uni, 2);
+
+    // do the draw
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   }
 }
 
@@ -172,10 +238,10 @@ static void init_pos_buffer(board_handle b) {
 }
 
 static void init_shaders() {
-  vshader = make_shader(GL_VERTEX_SHADER, VERTEX_SHADER_FILE);
+  vshader = make_shader(GL_VERTEX_SHADER, VERTEX_SHADER_FILE, FALSE);
   if (vshader == 0)
     panic("Failed to set up vertex shader.");
-  gshader = make_shader(GL_GEOMETRY_SHADER, GEO_SHADER_FILE);
+  gshader = make_shader(GL_GEOMETRY_SHADER, GEO_SHADER_FILE, FALSE);
   if (gshader == 0)
     panic("Failed to set up geometry shader.");
   // load and compile each fragment shader, build a program from it, and add
@@ -184,11 +250,22 @@ static void init_shaders() {
   programs = malloc(sizeof(GLuint) * registry_size(registry));
   for (int i = 0; i < registry_size(registry); i++) {
     fshaders[i] = make_shader(
-        GL_FRAGMENT_SHADER, registry_get(registry, i + 1));
+        GL_FRAGMENT_SHADER, registry_get(registry, i + 1), TRUE);
     programs[i] = make_program(vshader, gshader, fshaders[i]);
     if (programs[i] == 0)
       panic("Failed to create program.");
   }
+
+  // set up ssao shaders
+  ssao_vshader = make_shader(GL_VERTEX_SHADER, SSAO_VSHADER_FILE, FALSE);
+  if (ssao_vshader == 0)
+    panic("Failed to set up SSAO vertex shader.");
+  ssao_fshader = make_shader(GL_FRAGMENT_SHADER, SSAO_FSHADER_FILE, FALSE);
+  if (ssao_fshader == 0)
+    panic("Failed to set up SSAO fragment shader.");
+  ssao_program = make_program(ssao_vshader, 0, ssao_fshader);
+  if (ssao_program == 0)
+    panic("Failed to link SSAO program.");
 }
 
 static void update_buckets() {
@@ -219,21 +296,69 @@ static void update_buckets() {
   }
 }
 
-static void set_uniforms(GLuint program, GLfloat * cam_matrix) {
+static void set_uniforms(
+    GLuint program, GLfloat * cam_matrix, GLfloat * cam_rot_matrix) {
   // set perspective matrix uniform
   GLint persp_mat_uni = glGetUniformLocation(program, "perspective_matrix");
-  if (persp_mat_uni == -1) {
+  if (persp_mat_uni == -1)
     printf("Warning: error setting perspective matrix uniform.\n");
-  }
   glUniformMatrix4fv(persp_mat_uni, 1, GL_FALSE, perspective_matrix);
   // set camera matrix uniform
   GLint cam_mat_uni = glGetUniformLocation(program, "cam_matrix");
   if (cam_mat_uni == -1)
-    printf("Warning: error setting cube size uniform.\n");
+    printf("Warning: error setting camera matrix uniform.\n");
   glUniformMatrix4fv(cam_mat_uni, 1, GL_FALSE, cam_matrix);
+  // set rotation matrix uniform
+  GLint cam_mat_rot_uni = glGetUniformLocation(program, "cam_rot_matrix");
+  if (cam_mat_rot_uni == -1)
+    printf("Warning: error setting camera rotation uniform.\n");
+  glUniformMatrix4fv(cam_mat_rot_uni, 1, GL_FALSE, cam_rot_matrix);
   // set cube size uniform
   GLint cube_size_uni = glGetUniformLocation(program, "cube_size");
   if (cube_size_uni == -1)
     printf("Warning: error setting cube size uniform.\n");
   glUniform1f(cube_size_uni, cube_size);
+}
+
+static void init_mrt() {
+  // Create textures
+  GLuint * ptrs[3] = {&geo_tex, &pos_tex, &norm_tex};
+  int width = screen_width(screen);
+  int height = screen_height(screen);
+  char * texbuf = malloc(sizeof(char) * 3 * width * height);
+  for (int i = 0; i < 3; i++) {
+    GLuint * tex = ptrs[i];
+    glGenTextures(1, tex);
+    glBindTexture(GL_TEXTURE_2D, *tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE,
+        texbuf);
+  }
+  free(texbuf);
+
+  // Set up framebuffer object
+  glGenFramebuffers(1, &mrt_fb);
+  glBindFramebuffer(GL_FRAMEBUFFER, mrt_fb);
+  // add textures to fbo
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, geo_tex, 0);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, pos_tex, 0);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, norm_tex, 0);
+  // add a depthbuffer to fbo
+  glGenRenderbuffers(1, &mrt_depthbuffer);
+  glBindRenderbuffer(GL_RENDERBUFFER, mrt_depthbuffer);
+  glRenderbufferStorage(
+      GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+  glFramebufferRenderbuffer(
+      GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, mrt_depthbuffer);
+}
+
+static void init_ssao_buffer() {
+  glGenBuffers(1, &ssao_vert_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, ssao_vert_buffer);
+  glBufferData(
+      GL_ARRAY_BUFFER, 4 * sizeof(GLfloat) * 3, ssao_vertices, GL_STATIC_DRAW);
 }

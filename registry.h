@@ -5,7 +5,7 @@
 
 typedef struct registry * registry_handle;
 
-registry_handle registry_new();
+registry_handle registry_new(void);
 
 void registry_delete(registry_handle r);
 

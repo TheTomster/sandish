@@ -1,8 +1,5 @@
 #version 150
 
-const float camera_near = 0.5;
-const float camera_far = 30.0;
-
 in vec4 position;
 
 uniform mat4 cam_matrix;

@@ -14,17 +14,16 @@
 #include "screen.h"
 #include "tick.h"
 
-#define FULLSCREEN          1
+#define FULLSCREEN
 #define WINDOW_WIDTH        800
 #define WINDOW_HEIGHT       600
 #define WINDOW_TITLE        "Sandish"
 
 #define BOARD_WORLD_CENTER  {0, 0, -7, 1}
-#define BOARD_WORLD_SIZE    5
-#define BOARD_SIZE          32
+#define BOARD_WORLD_SIZE    10
+#define BOARD_SIZE          48
 
-//static void mainloop();
-static void on_resize();
+static void on_resize(int w, int h);
 
 static screen_handle screen;
 
@@ -34,13 +33,13 @@ int main(void) {
     panic("Error initializing GLFW!");
   GLFWvidmode vm;
   glfwGetDesktopMode(&vm);
-  if (FULLSCREEN) {
+  #ifdef FULLSCREEN
     ok = glfwOpenWindow(
         vm.Width, vm.Height, 0, 0, 0, 0, 8, 0, GLFW_FULLSCREEN);
-  } else {
+  #else
     ok = glfwOpenWindow(
         WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, 0, 0, 8, 0, GLFW_WINDOW);
-  }
+  #endif
   if (!ok)
     panic ("Error opening window!");
   if (gl3wInit())
@@ -49,8 +48,10 @@ int main(void) {
   glfwSwapInterval(1);
   glfwSwapBuffers();
 
-  glfwDisable(GLFW_MOUSE_CURSOR);
-  glfwSetMousePos(0, 0);
+  #ifdef FULLSCREEN
+    glfwDisable(GLFW_MOUSE_CURSOR);
+    glfwSetMousePos(0, 0);
+  #endif
 
   screen = screen_new();
   glfwSetWindowSizeCallback(&on_resize);

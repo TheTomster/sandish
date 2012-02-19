@@ -1,0 +1,4 @@
+1: Off-by-one error somewhere in the code that determines cursor position.
+  Cursor sometimes appears in back of box when it should be in the front, also
+  appears on bottom when it should appear in top.
+  POSSIBLY FIXED

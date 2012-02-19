@@ -22,11 +22,11 @@ void screen_delete(screen_handle s) {
 }
 
 int screen_height(screen_handle s) {
-  return s->width;
+  return s->height;
 }
 
 int screen_width(screen_handle s) {
-  return s->height;
+  return s->width;
 }
 
 GLfloat screen_aspect_ratio(screen_handle s) {
