@@ -4,7 +4,7 @@ in frag {
 
 void main() {
   float intensity = 0.7 + (0.1 * i.rand);
-  gl_FragData[0] = vec4(intensity, intensity, 0, 1.0);
+  gl_FragData[0] = vec4(intensity, intensity, intensity, 1.0);
   pos_color();
   norm_color();
 }

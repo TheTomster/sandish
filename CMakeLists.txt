@@ -29,7 +29,9 @@ set(shader_files
   util.frag.glsl
 
   concrete.frag.glsl
+  man.frag.glsl
   sand.frag.glsl
+  sandstone.frag.glsl
   water.frag.glsl
 
   ssao/fragment.glsl
@@ -41,7 +43,9 @@ set(lua_files
   utils.lua
 
   concrete.lua
+  man.lua
   sand.lua
+  sandstone.lua
   water.lua
 )
 

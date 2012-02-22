@@ -11,4 +11,10 @@ function utils.offBoard(x, y, z)
   end
 end
 
+function utils.clamp(min, max, value)
+  if value < min then return min end
+  if value > max then return max end
+  return value
+end
+
 return utils

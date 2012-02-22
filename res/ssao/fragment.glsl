@@ -4,8 +4,7 @@ uniform sampler2D geo_samp;
 uniform sampler2D pos_samp;
 uniform sampler2D norm_samp;
 
-const float RADIUS = 10;
-const float INTENSITY = 1.0;
+const float RADIUS = 2;
 
 void main() {
   vec2 size = textureSize(geo_samp, 0);
@@ -42,12 +41,17 @@ void main() {
   vec3 ao = vec3(0, 0, 0);
 
   for (int i = 0; i < 8; i++) {
-    vec2 coord = uv + sample_vectors[i] * RADIUS / size * p.z;
+    vec2 r = RADIUS / size / (1 - p.z);
+    vec2 coord = uv + sample_vectors[i] * r;
     vec3 p2 = texture(pos_samp, coord).rgb;
-    ao +=  p2.z - 0.001 < p.z ? 1.0 : 1 - INTENSITY;
+    float o = p2.z - 0.001 > p.z ? 1.0 : 0.0;;
+    if (distance(p2.z, p.z) > 2*r) {
+      o = 0.0;
+    }
+    ao += o;
   }
   ao /= 8;
 
-  //gl_FragColor.rgb = ao;
-  gl_FragColor.rgb = gl_FragColor.rgb * ao;
+  //gl_FragColor.rgb = 1 - ao;
+  gl_FragColor.rgb = gl_FragColor.rgb * (1 - ao);
 }

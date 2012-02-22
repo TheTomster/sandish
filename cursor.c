@@ -8,7 +8,7 @@
 #include "matrix.h"
 #include "vec4.h"
 
-#define CURSOR_DEPTH -2
+#define CURSOR_DEPTH -4
 
 struct cursor {
   vec4 board_pos;

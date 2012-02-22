@@ -8,7 +8,7 @@ in fragutil {
 void pos_color() {
   vec4 retc = vec4(0, 0, 0, 1);
   retc.xy = smoothstep(-3, 3, ifu.pos.xy);
-  retc.z = 1 - ifu.pos.z / 15;
+  retc.z = 1 - ifu.pos.z / 30;
   gl_FragData[1].rgb = retc.rgb;
 }
 

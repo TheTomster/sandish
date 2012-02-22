@@ -24,7 +24,9 @@ end
 function registry.init()
   newRule("res/sand.frag.glsl", "lua/sand.lua")
   newRule("res/water.frag.glsl", "lua/water.lua")
-  concrete_dv = newRule("res/concrete.frag.glsl", "lua/concrete.lua")
+  newRule("res/concrete.frag.glsl", "lua/concrete.lua")
+  newRule("res/man.frag.glsl", "lua/man.lua")
+  newRule("res/sandstone.frag.glsl", "lua/sandstone.lua")
 end
 
 
@@ -32,7 +34,7 @@ function main()
   -- Init the board to have concrete on the bottom layer
   for x = 1, board.size do
     for z = 1, board.size do
-      board.setN(x, 1, z, concrete_dv)
+      board.setN(x, 1, z, concrete.data_value)
     end
   end
   -- Enter mainloop

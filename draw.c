@@ -18,7 +18,7 @@
 
 #define FRUSTUM_SCALE   1.0
 #define FRUSTUM_NEAR    0.01
-#define FRUSTUM_FAR     15.0
+#define FRUSTUM_FAR     30.0
 
 static screen_handle screen;
 static board_handle board;
