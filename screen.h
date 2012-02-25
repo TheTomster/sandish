@@ -16,3 +16,9 @@ int screen_width(screen_handle s);
 GLfloat screen_aspect_ratio(screen_handle s);
 
 void screen_set_size(screen_handle s, int width, int height);
+
+void screen_set_fullscreen(screen_handle s, int is_fullscreen);
+
+int screen_fullscreen(screen_handle s);
+
+void screen_midpoint(int * x, int * y, screen_handle s);

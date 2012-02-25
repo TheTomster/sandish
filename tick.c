@@ -9,22 +9,23 @@
 #include "draw.h"
 #include "matrix.h"
 #include "tick.h"
+#include "screen.h"
 
 #define MOVEMENT_DAMPING 0.05
 #define ANGLE_DAMPING 0.001
 
-#define FULLSCREEN
-
 static board_handle board;
 static cam_handle camera;
 static cursor_handle cursor;
+static screen_handle screen;
 
 static void handle_inputs(void);
 
-void tick_init(board_handle b, cam_handle c, cursor_handle cu) {
+void tick_init(board_handle b, cam_handle c, cursor_handle cu, screen_handle s) {
   board = b;
   camera = c;
   cursor = cu;
+  screen = s;
 }
 
 int tick(int swap) {
@@ -44,14 +45,12 @@ int tick(int swap) {
 
 static void handle_inputs() {
   { // handle mouse movement
-    int x, y;
-    #ifdef FULLSCREEN
+    int x, y, mid_x, mid_y;
     glfwGetMousePos(&x, &y);
-    glfwSetMousePos(0, 0);
-    #else
-    x = 0;
-    y = 0;
-    #endif
+    screen_midpoint(&mid_x, &mid_y, screen);
+    glfwSetMousePos(mid_x, mid_y);
+    x = x - mid_x;
+    y = y - mid_y;
 
     cam_rotate(camera, y * ANGLE_DAMPING, x * ANGLE_DAMPING);
     cursor_update(cursor);

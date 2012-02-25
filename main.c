@@ -14,7 +14,6 @@
 #include "screen.h"
 #include "tick.h"
 
-#define FULLSCREEN
 #define WINDOW_WIDTH        800
 #define WINDOW_HEIGHT       600
 #define WINDOW_TITLE        "Sandish"
@@ -23,37 +22,57 @@
 #define BOARD_WORLD_SIZE    10
 #define BOARD_SIZE          32
 
+#define WINDOWED_FLAG "--window"
+
 static void on_resize(int w, int h);
 
 static screen_handle screen;
 
-int main(void) {
+int main(int argc, char * argv[]) {
+
+  screen = screen_new();
+
+  if (argc < 2) {
+    screen_set_fullscreen(screen, 1);
+  } else {
+    if (strcmp(argv[1], WINDOWED_FLAG) == 0) {
+      screen_set_fullscreen(screen, 0);
+    } else {
+      screen_set_fullscreen(screen, 1);
+    }
+  }
+
   int ok = glfwInit();
   if (!ok)
     panic("Error initializing GLFW!");
   GLFWvidmode vm;
   glfwGetDesktopMode(&vm);
-  #ifdef FULLSCREEN
+
+  if (screen_fullscreen(screen)) {
     ok = glfwOpenWindow(
         vm.Width, vm.Height, 0, 0, 0, 0, 8, 0, GLFW_FULLSCREEN);
-  #else
+    screen_set_size(screen, vm.Width, vm.Height);
+  } else {
     ok = glfwOpenWindow(
         WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, 0, 0, 8, 0, GLFW_WINDOW);
-  #endif
+    screen_set_size(screen, WINDOW_WIDTH, WINDOW_HEIGHT);
+  }
+
   if (!ok)
     panic ("Error opening window!");
   if (gl3wInit())
     panic("Gl3w failed to load!");
+
   glfwSetWindowTitle(WINDOW_TITLE);
   glfwSwapInterval(1);
   glfwSwapBuffers();
 
-  #ifdef FULLSCREEN
-    glfwDisable(GLFW_MOUSE_CURSOR);
-    glfwSetMousePos(0, 0);
-  #endif
+  glfwDisable(GLFW_MOUSE_CURSOR);
 
-  screen = screen_new();
+  int mid_x, mid_y;
+  screen_midpoint(&mid_x, &mid_y, screen);
+  glfwSetMousePos(mid_x, mid_y);
+
   glfwSetWindowSizeCallback(&on_resize);
 
   cam_handle c;
@@ -77,7 +96,7 @@ int main(void) {
   registry_handle r;
   r = registry_new ();
 
-  tick_init(b, c, cu);
+  tick_init(b, c, cu, screen);
 
   lualink_init(b, r);
   lualink_load_main();
@@ -90,6 +109,8 @@ int main(void) {
   board_delete(b);
   cam_delete(c);
   screen_delete(screen);
+  cursor_delete(cu);
+  registry_delete(r);
   glfwTerminate();
   return EXIT_SUCCESS;
 }

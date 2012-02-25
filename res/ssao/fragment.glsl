@@ -41,11 +41,11 @@ void main() {
   vec3 ao = vec3(0, 0, 0);
 
   for (int i = 0; i < 8; i++) {
-    vec2 r = RADIUS / size / (1 - p.z);
+    float r = RADIUS / size.x / (1 - p.z);
     vec2 coord = uv + sample_vectors[i] * r;
     vec3 p2 = texture(pos_samp, coord).rgb;
     float o = p2.z - 0.001 > p.z ? 1.0 : 0.0;;
-    if (distance(p2.z, p.z) > 2*r) {
+    if (distance(p2.z, p.z) > r) {
       o = 0.0;
     }
     ao += o;
