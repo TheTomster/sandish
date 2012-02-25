@@ -17,7 +17,6 @@ void main() {
   float b = position.y * position.z;
   float r = fract(sin(dot(vec2(a, b), vec2(12.9898, 78.233))) * 43758.5453);
 
-  position = perspective_matrix * cam_matrix * position;
+  gl_Position = perspective_matrix * cam_matrix * position;
   o.rand = r;
-  gl_Position = position;
 }
