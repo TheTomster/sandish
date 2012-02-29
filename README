@@ -2,7 +2,7 @@
 
 Tested on Windows 7, with an ATI Radeon HD4850.
 
-To run, simply run sandish.exe. If all resources are located properly, it
+To run, simply run build/sandish.exe. If all resources are located properly, it
 should work. One problem I've come across is that on some computers, it seems
 to have trouble locating main.lua. I was unable to determine why this would
 happen (works fine on many computers, the files were present, etc etc). Also
@@ -22,3 +22,8 @@ By default, you'll add sand. To change the current cube type, press the keys
   2 water
   3 concrete
   4 worker
+
+NOTES
+  - I'm still not really happy with the SSAO shader. As it is now I think
+    adding a blur pass would make it look reasonably good, but I just don't
+    have time to add it.

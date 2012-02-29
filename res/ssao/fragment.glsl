@@ -48,7 +48,7 @@ void main() {
     vec2 v = sample_vectors[i];
     vec2 rotated;
     // uncomment to disable noise
-    // float angle = 3.14159 / 2;
+    //float angle = 3.14159 / 2;
     rotated.x = v.x * cos(angle) - v.y * sin(angle);
     rotated.y = v.x * sin(angle) + v.y * cos(angle);
     float r = RADIUS / size.x / (1 - p.z);
@@ -60,12 +60,13 @@ void main() {
       o = 0.0;
     }
     if (n == n2) {
-      o = 0.0;
+      // Uncomment to remove occlusion when the normal matches
+      //o = 0.0;
     }
     ao += o;
   }
   ao /= 8;
 
   //gl_FragColor.rgb = 1 - ao;
-  gl_FragColor.rgb = gl_FragColor.rgb * (1 - ao * 0.75);
+  gl_FragColor.rgb = gl_FragColor.rgb * (1 - ao);
 }
