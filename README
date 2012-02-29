@@ -1,0 +1,24 @@
+3D FALLING SAND
+
+Tested on Windows 7, with an ATI Radeon HD4850.
+
+To run, simply run sandish.exe. If all resources are located properly, it
+should work. One problem I've come across is that on some computers, it seems
+to have trouble locating main.lua. I was unable to determine why this would
+happen (works fine on many computers, the files were present, etc etc). Also
+due to some differences in OpenGL implementations, I saw some issues running on
+Nvidia cards. I think all of those issues have been resolved.
+
+Once the program starts, you should see a floor. This marks the bottom of the
+cube. Use the WASD keys to move the camera. Use the mouse to look around. If
+you move closer to the cube, you should see a floating cube appear. This is
+your cursor. When you click, cubes will be added to the simulation at the
+cursor.
+
+By default, you'll add sand. To change the current cube type, press the keys
+1-4.
+
+  1 sand
+  2 water
+  3 concrete
+  4 worker
