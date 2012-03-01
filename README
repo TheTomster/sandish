@@ -1,6 +1,28 @@
 3D FALLING SAND
 
-Tested on Windows 7, with an ATI Radeon HD4850.
+INSTALLATION
+
+None required, simply unzip everything to a nice clean folder, and run
+build/sandish.exe
+
+COMPILATION
+
+Because of the crazy build setup and prerequisites, it's probably better to
+look at the source and enjoy the precompiled binary I'm providing. If you
+really want to compile the code, you'll need CMake. I used MinGW to compile.
+You'll need to have Lua, GLFW, and GL3W compiled and ready to go in order to
+build this project.  Assuming you have all prerequisites, cd to the project
+source directory and run:
+
+  rm -rf build/*
+  cd build
+  cmake ..
+  make
+
+RUNNING
+
+I tested on Windows 7, with an ATI Radeon HD4850. It is /not/ portable to other
+operating systems.
 
 To run, simply run build/sandish.exe. If all resources are located properly, it
 should work. One problem I've come across is that on some computers, it seems
@@ -22,8 +44,3 @@ By default, you'll add sand. To change the current cube type, press the keys
   2 water
   3 concrete
   4 worker
-
-NOTES
-  - I'm still not really happy with the SSAO shader. As it is now I think
-    adding a blur pass would make it look reasonably good, but I just don't
-    have time to add it.
