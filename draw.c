@@ -1,6 +1,8 @@
 #include <GL3/gl3w.h>
 #include <stdio.h>
 
+#include "tgl/tgl.h"
+
 #include "board.h"
 #include "cam.h"
 #include "cursor.h"
@@ -9,16 +11,16 @@
 #include "panic.h"
 #include "registry.h"
 #include "screen.h"
-#include "utils.h"
-
-#define VERTEX_SHADER_FILE  "res/vertex.glsl"
-#define GEO_SHADER_FILE     "res/geometry.glsl"
-#define SSAO_VSHADER_FILE   "res/ssao/vertex.glsl"
-#define SSAO_FSHADER_FILE   "res/ssao/fragment.glsl"
 
 #define FRUSTUM_SCALE   1.0
 #define FRUSTUM_NEAR    0.01
 #define FRUSTUM_FAR     30.0
+
+static const char * VERTEX_SHADER_FILE = "res/vertex.glsl";
+static const char * GEO_SHADER_FILE    = "res/geometry.glsl";
+static const char * SSAO_VSHADER_FILE  = "res/ssao/vertex.glsl";
+static const char * SSAO_FSHADER_FILE  = "res/ssao/fragment.glsl";
+static const char * FSHADER_UTILS_FILE = "res/util.frag.glsl";
 
 static screen_handle screen;
 static board_handle board;
@@ -238,10 +240,16 @@ static void init_pos_buffer(board_handle b) {
 }
 
 static void init_shaders() {
-  vshader = make_shader(GL_VERTEX_SHADER, VERTEX_SHADER_FILE, FALSE);
+  {
+    tgl_shaderset ss = {&VERTEX_SHADER_FILE, 1};
+    vshader = tgl_make_shader(GL_VERTEX_SHADER, ss);
+  }
   if (vshader == 0)
     panic("Failed to set up vertex shader.");
-  gshader = make_shader(GL_GEOMETRY_SHADER, GEO_SHADER_FILE, FALSE);
+  {
+    tgl_shaderset ss = {&GEO_SHADER_FILE, 1};
+    gshader = tgl_make_shader(GL_GEOMETRY_SHADER, ss);
+  }
   if (gshader == 0)
     panic("Failed to set up geometry shader.");
   // load and compile each fragment shader, build a program from it, and add
@@ -249,21 +257,34 @@ static void init_shaders() {
   fshaders = malloc(sizeof(GLuint) * registry_size(registry));
   programs = malloc(sizeof(GLuint) * registry_size(registry));
   for (int i = 0; i < registry_size(registry); i++) {
-    fshaders[i] = make_shader(
-        GL_FRAGMENT_SHADER, registry_get(registry, i + 1), TRUE);
-    programs[i] = make_program(vshader, gshader, fshaders[i]);
+    {
+      tgl_shaderset ss;
+      const char * filenames[2];
+      filenames[0] = FSHADER_UTILS_FILE;
+      filenames[1] = registry_get(registry, i + 1);
+      ss.filenames = filenames;
+      ss.nfiles = 2;
+      fshaders[i] = tgl_make_shader(GL_FRAGMENT_SHADER, ss);
+    }
+    programs[i] = tgl_make_program(vshader, gshader, fshaders[i]);
     if (programs[i] == 0)
       panic("Failed to create program.");
   }
 
   // set up ssao shaders
-  ssao_vshader = make_shader(GL_VERTEX_SHADER, SSAO_VSHADER_FILE, FALSE);
+  {
+    tgl_shaderset ss = {&SSAO_VSHADER_FILE, 1};
+    ssao_vshader = tgl_make_shader(GL_VERTEX_SHADER, ss);
+  }
   if (ssao_vshader == 0)
     panic("Failed to set up SSAO vertex shader.");
-  ssao_fshader = make_shader(GL_FRAGMENT_SHADER, SSAO_FSHADER_FILE, FALSE);
+  {
+    tgl_shaderset ss = {&SSAO_FSHADER_FILE, 1};
+    ssao_fshader = tgl_make_shader(GL_FRAGMENT_SHADER, ss);
+  }
   if (ssao_fshader == 0)
     panic("Failed to set up SSAO fragment shader.");
-  ssao_program = make_program(ssao_vshader, 0, ssao_fshader);
+  ssao_program = tgl_make_program(ssao_vshader, 0, ssao_fshader);
   if (ssao_program == 0)
     panic("Failed to link SSAO program.");
 }
