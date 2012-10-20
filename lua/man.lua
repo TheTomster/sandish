@@ -1,4 +1,4 @@
-require('utils')
+require("lua/utils")
 
 MOVE_TIMER = 20
 HASH_SIZE = 512
