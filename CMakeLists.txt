@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
 
-find_package(OpenGL)
+# find_package(OpenGL)
 
-include_directories(${PROJECT_SOURCE_DIR}/tgl)
+include_directories(tgl gl3w)
 add_subdirectory(tgl)
+add_subdirectory(gl3w)
 
 project(sandish)
 
@@ -23,7 +24,7 @@ add_executable(sandish
   vec4.c
 )
 
-target_link_libraries(sandish tgl lua glfw gl3w ${OPENGL_LIBRARY})
+target_link_libraries(sandish tgl lua5.2 glfw gl3w GL)
 
 set(shader_files
   geometry.glsl
