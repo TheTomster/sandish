@@ -10,9 +10,9 @@ assert(board.getSize() < HASH_SIZE, "Man particle requires board smaller than 51
 local state = {}
 
 local function hashFn(x, y, z)
-  x = x * HASH_SIZE * HASH_SIZE
-  y = y * HASH_SIZE
-  z = z
+  local x = x * HASH_SIZE * HASH_SIZE
+  local y = y * HASH_SIZE
+  local z = z
   return x + y + z
 end
 
